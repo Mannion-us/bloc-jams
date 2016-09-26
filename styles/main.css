@@ -103,4 +103,13 @@
      color: rgb(233,50,117);
      font-size: 5rem;
  }
- 
+
+.clearfix::before,
+.clearfix::after {
+   content: " ";
+   display: table;
+}
+
+.clearfix::after {
+   clear: both;
+}
