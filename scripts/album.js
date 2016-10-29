@@ -1,21 +1,19 @@
- // Example Album
- var albumPicasso = {
-     title: 'The Colors',
-     artist: 'Pablo Picasso',
-     label: 'Cubism',
-     year: '1881',
-     albumArtUrl: 'assets/images/album_covers/01.png',
-     songs: [
-         { title: 'Blue', duration: '4:26' },
-         { title: 'Green', duration: '3:14' },
-         { title: 'Red', duration: '5:01' },
-         { title: 'Pink', duration: '3:21'},
-         { title: 'Magenta', duration: '2:15'}
-     ]
- };
+var albumPicasso = {
+    title: 'The Colors',
+    artist: 'Pablo Picasso',
+    label: 'Cubism',
+    year: '1881',
+    albumArtUrl: 'assets/images/album_covers/01.png',
+    songs: [
+        { title: 'Blue', duration: '4:26' },
+        { title: 'Green', duration: '3:14' },
+        { title: 'Red', duration: '5:01' },
+        { title: 'Pink', duration: '3:21'},
+        { title: 'Magenta', duration: '2:15'}
+    ]
+};
  
- // Another Example Album
- var albumMarconi = {
+var albumMarconi = {
      title: 'The Telephone',
      artist: 'Guglielmo Marconi',
      label: 'EM',
@@ -30,8 +28,30 @@
      ]
  };
 
-  var createSongRow = function(songNumber, songName, songLength) {
-     var template =
+var albumPresley = {
+    title: 'Elvis',
+    artist: 'Elvis Presley',
+    label: 'RCA Victor',
+    year: '1956',
+    albumArtUrl: 'assets/images/album_covers/rca-ep-1382.jpg',
+    songs: [
+        { title: 'Rip It Up', duration: 'XX:XX' },
+        { title: 'Love Me', duration: 'XX:XX' },
+        { title: 'When My Blue Moon Turns to Gold Again', duration: 'XX:XX'},
+        { title: 'Long Tall Sally', duration: 'XX:XX' },
+        { title: 'First in Line', duration: 'XX:XX'},
+        { title: 'Paralyzed', duration: 'XX:XX'},
+        { title: 'So Glad You\'re Mine', duration: 'XX:XX'},
+        { title: 'Old Shep', duration: 'XX:XX'},
+        { title: 'Ready Teddy', duration: 'XX:XX'},
+        { title: 'Anyplace is Paradise', duration: 'XX:XX'},
+        { title: 'How\'s the World Treating You', duration: 'XX:XX'},
+        { title: 'How Do You Think I Feel', duration: 'XX:XX'}
+    ]
+};
+
+var createSongRow = function(songNumber, songName, songLength) {
+    var template =
         '<tr class="album-view-song-item">'
       + '  <td class="song-item-number">' + songNumber + '</td>'
       + '  <td class="song-item-title">' + songName + '</td>'
@@ -42,29 +62,43 @@
      return template;
  };
 
+
+	var albumTitle = document.getElementsByClassName('album-view-title')[0];
+	var albumArtist = document.getElementsByClassName('album-view-artist')[0];
+	var albumReleaseInfo = document.getElementsByClassName('album-view-release-info')[0];
+	var albumImage = document.getElementsByClassName('album-cover-art')[0];
+	var albumSongList = document.getElementsByClassName('album-view-song-list')[0];
+
   var setCurrentAlbum = function(album) {
-     // #1
-     var albumTitle = document.getElementsByClassName('album-view-title')[0];
-     var albumArtist = document.getElementsByClassName('album-view-artist')[0];
-     var albumReleaseInfo = document.getElementsByClassName('album-view-release-info')[0];
-     var albumImage = document.getElementsByClassName('album-cover-art')[0];
-     var albumSongList = document.getElementsByClassName('album-view-song-list')[0];
- 
-     // #2
-     albumTitle.firstChild.nodeValue = album.title;
-     albumArtist.firstChild.nodeValue = album.artist;
-     albumReleaseInfo.firstChild.nodeValue = album.year + ' ' + album.label;
-     albumImage.setAttribute('src', album.albumArtUrl);
- 
-     // #3
-     albumSongList.innerHTML = '';
- 
-     // #4
-     for (var i = 0; i < album.songs.length; i++) {
-         albumSongList.innerHTML += createSongRow(i + 1, album.songs[i].title, album.songs[i].duration);
-     }
- };
- 
- window.onload = function() {
-     setCurrentAlbum(albumPicasso);
- };
+
+    albumTitle.firstChild.nodeValue = album.title;
+    albumArtist.firstChild.nodeValue = album.artist;
+    albumReleaseInfo.firstChild.nodeValue = album.year + ' ' + album.label;
+    albumImage.setAttribute('src', album.albumArtUrl);
+
+    albumSongList.innerHTML = '';
+
+
+    for (var i = 0; i < album.songs.length; i++) {
+        albumSongList.innerHTML += createSongRow(i + 1, album.songs[i].title, album.songs[i].duration);
+    }
+};
+
+window.onload = function() {
+	setCurrentAlbum(albumPicasso);
+
+
+
+	var albums = [albumPicasso, albumMarconi, albumPresley];
+
+	var index = 1;
+
+	albumImage.addEventListener("click", function(event) {
+
+        setCurrentAlbum(albums[index]);
+        index++;
+        if(index == albums.length){
+			index=0;
+        }
+    });
+};
