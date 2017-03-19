@@ -21,13 +21,19 @@ var createSongRow = function(songNumber, songName, songLength) {
       setSong(songNumber);
       currentSoundFile.play();
       currentSongFromAlbum = currentAlbum.songs[songNumber - 1];
+      updateSeekBarWhileSongPlays();
       updatePlayerBarSong();
+          var $volumeFill = $('.volume .fill');
+          var $volumeThumb = $('.volume .thumb');
+          $volumeFill.width(currentVolume + '%');
+          $volumeThumb.css({left: currentVolume + '%'});
       }
     else if (currentlyPlayingSongNumber === songNumber) {
       if (currentSoundFile.isPaused()){
         $(this).html(pauseButtonTemplate);
         $('.main-controls .play-pause').html(playerBarPauseButton);
         currentSoundFile.play();
+        updateSeekBarWhileSongPlays();
         }
       else {
         $(this).html(playButtonTemplate);
@@ -37,10 +43,10 @@ var createSongRow = function(songNumber, songName, songLength) {
       }
   };
   var onHover = function(event) {
-		var songNumberRow = $(this).find('.song-item-number');
-		var songNumber = parseInt(songNumberRow.attr('data-song-number'));
-		if (songNumber !== currentlyPlayingSongNumber) {
-			songNumberRow.html(playButtonTemplate);
+    var songNumberRow = $(this).find('.song-item-number');
+    var songNumber = parseInt(songNumberRow.attr('data-song-number'));
+    if (songNumber !== currentlyPlayingSongNumber) {
+        songNumberRow.html(playButtonTemplate);
           }
      };
   var offHover = function(event) {
@@ -65,6 +71,12 @@ var setSong = function(songNumber) {
       preload: true
     });
     setVolume(currentVolume);
+    console.log(' " ' + currentSongFromAlbum.title + ' " ' + ' song is now playing.');
+};
+var seek = function(time) {
+   if (currentSoundFile) {
+       currentSoundFile.setTime(time);
+   }
 };
 var setVolume = function(volume) {
   if (currentSoundFile) {
@@ -85,12 +97,71 @@ var setCurrentAlbum = function(album) {
 };
 var fixCurrentAlbum = function() {
     console.log("fixCurrentAlbum called. albumIndex:", albumIndex);
+    // Selected "Album" Name should appear in console log //
     setCurrentAlbum(albums[albumIndex]);
+    console.log(' " ' + albums[albumIndex].title +' " ' + ' is the album now displayed.'); //remove this after testing...//
     albumIndex++;
     if (albumIndex === albums.length) {
       albumIndex = 0;
     }
 };
+
+var updateSeekBarWhileSongPlays = function() {
+    if (currentSoundFile) {
+        currentSoundFile.bind('timeupdate', function(event) {
+            var seekBarFillRatio = this.getTime() / this.getDuration();
+
+            var $seekBar = $('.seek-control .seek-bar');
+            updateSeekPercentage($seekBar, seekBarFillRatio);
+        });
+    }
+};
+
+var updateSeekPercentage = function($seekBar, seekBarFillRatio) {
+    var offsetXPercent = seekBarFillRatio * 100;
+    offsetXPercent = Math.max(0, offsetXPercent);
+    offsetXPercent = Math.min(100, offsetXPercent);
+    
+    var percentageString = offsetXPercent + '%';
+    $seekBar.find('.fill').width(percentageString);
+    $seekBar.find('.thumb').css({left: percentageString});
+};
+
+var setupSeekBars = function() {
+    var $seekBars = $('.player-bar .seek-bar');
+    
+    $seekBars.click(function(event) {
+        var offsetX = event.pageX - $(this).offset().left;
+        var barWidth = $(this).width();
+        var seekBarFillRatio = offsetX / barWidth;
+        if ($(this).parent().attr('class') == 'seek-control') {
+            seek(seekBarFillRatio * currentSoundFile.getDuration());
+        } else {
+            setVolume(seekBarFillRatio * 100);   
+        }
+        updateSeekPercentage($(this), seekBarFillRatio);
+    });
+    
+    $seekBars.find('.thumb').mousedown(function(event) {
+        var $seekBar = $(this).parent();
+        $(document).bind('mousemove.thumb', function(event){
+            var offsetX = event.pageX - $seekBar.offset().left;
+            var barWidth = $seekBar.width();
+            var seekBarFillRatio = offsetX / barWidth;
+            if ($seekBar.parent().attr('class') == 'seek-control') {
+                seek(seekBarFillRatio * currentSoundFile.getDuration());   
+            } else {
+                setVolume(seekBarFillRatio);
+            }
+            updateSeekPercentage($seekBar, seekBarFillRatio);
+        });
+        $(document).bind('mouseup.thumb', function() {
+            $(document).unbind('mousemove.thumb');
+            $(document).unbind('mouseup.thumb');
+        });
+    });
+ };
+
 var updatePlayerBarSong = function(){
   $('.currently-playing .song-name').text(currentSongFromAlbum.title);
   $('.currently-playing .artist-name').text(currentAlbum.artist);
@@ -111,6 +182,7 @@ var nextSong = function() {
   };
   setSong(currentSongIndex + 1);
   currentSoundFile.play();
+    updateSeekBarWhileSongPlays();
   currentSongFromAlbum = currentAlbum.songs[currentSongIndex];
   $('.currently-playing .song-name').text(currentSongFromAlbum.title);
   $('.currently-playing .artist-name').text(currentAlbum.artist);
@@ -133,6 +205,7 @@ var previousSong = function(){
   }
   setSong(currentSongIndex + 1);
   currentSoundFile.play();
+    updateSeekBarWhileSongPlays();
   currentSongFromAlbum = currentAlbum.songs[currentSongIndex];
   $('.currently-playing .song-name').text(currentSongFromAlbum.title);
   $('.currently-playing .artist-name').text(currentAlbum.artist);
@@ -165,7 +238,7 @@ var currentAlbum = null;
 var currentlyPlayingSongNumber = null;
 var currentSongFromAlbum = null;
 var currentSoundFile = null;
-var currentVolume = 80;
+var currentVolume = 25;
 var $previousButton = $('.main-controls .previous');
 var $nextButton = $('.main-controls .next');
 var $playPauseButton = $('.main-controls .play-pause');
@@ -179,13 +252,20 @@ $(document).ready(function() {
   // populate albumIndex variable with the appropirate index from querystring
   setCurrentAlbum(albums[albumIndex]);
   albumIndex++;
+  setupSeekBars();
   $previousButton.click(previousSong);
   $nextButton.click(nextSong);
   $playPauseButton.click(togglePlayFromPlayerbar);
   $albumImage.click(function() {
-    console.log($albumSongList);
+    //console.log($albumSongList);  // need to fix this so that...
+    // Song List appears in console log by song names //
     console.log('$albumImage clicked');
     fixCurrentAlbum();
     });
-  console.log(albums);
+  console.log('The following are the albums in the "fixtures.js" file collection:');
+  for (var i = 0; i < albums.length; i++) {
+    console.log(albums[i].title);
+    //  console.log(Object.entries(albums)['name']);
+    // Albums should appear in console log by album names //
+    }
 });
